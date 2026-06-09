@@ -27,17 +27,7 @@ client = StandClient("__your_handshake_here__")
 async def main():
     await client.start()
 
-    request = GetPlayerRequest()
-
-    response = client.raw.PlayerRemoteService.getPlayer2Response(
-        await client.send_request(
-            *client.raw.PlayerRemoteService.getPlayer2Request(
-                request
-            )
-        )
-    )
-
-    client.logger.info(f'getPlayer2 response: {response}')
+    client.logger.info(f'getPlayer2 response: {await client.me()}')
 
     await client.stop()
 
