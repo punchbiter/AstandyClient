@@ -19,8 +19,7 @@ You need to obtain handshake for your game account and pass it to client
 import asyncio
 
 from Astandy import StandClient
-from Astandy.generated.services import GetPlayerRequest
-from Astandy.generated.listeners import MarketplaceRemoteEventListenerOnTradeRequestOpenedUpdate
+
 
 client = StandClient("__your_handshake_here__")
 
