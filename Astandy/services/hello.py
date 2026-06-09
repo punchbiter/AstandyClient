@@ -2,11 +2,10 @@ from secrets import token_bytes
 
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey, RSAPublicNumbers
-from cryptography.hazmat.primitives import hashes
 
-from Astandy.generated.schemes_pb2 import CHGACEEHFADEDHH
-from Astandy.types.service import Service
 import Astandy
+from Astandy.generated.protos import hello_message_pb2 as hello
+from Astandy.types.service import Service
 
 class HelloRemoteService(Service):
     def __init__(self):
@@ -25,26 +24,17 @@ class HelloRemoteService(Service):
     async def hello(self: 'Astandy.StandClient'):
         iv = token_bytes(16)
 
-        request = CHGACEEHFADEDHH()
-        request.DCAGCDFCHBBDCDB = self._public_nums.n.to_bytes(128, "big")
-        request.GABAFEDDDBEGGAE = self._public_nums.e.to_bytes(3, "big")
-        request.CGCGBGBEGCADABH = iv
-
-        response = self.raw.HelloRemoteService.helloResponse(
-            await self.send_request(
-                *self.raw.HelloRemoteService.helloRequest(
-                    request,
-                    self.cipher
-                )
-            ),
-            self.cipher
+        request = hello.HelloRequest(
+            n=self._public_nums.n.to_bytes(128, "big"),
+            e=self._public_nums.e.to_bytes(3, "big"),
+            iv=iv,
         )
+        response = await self.raw.HelloRemoteService.hello(self, request)
 
         key = self._rsa_key.decrypt(
-            response.FBHHACGFCHFEEED,
+            response.key,
             padding.PKCS1v15()
         )
         self.cipher.new_aes_cipher(key, iv)
 
         return True
-

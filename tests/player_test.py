@@ -9,11 +9,7 @@ import tests_config
 class PlayerServiceTestCase(unittest.IsolatedAsyncioTestCase):
     async def test_async_me(self):
         client = StandClient(
-            tests_config.HANDSHAKE,
-            host="82.211.7.47",
-            port=51524,
-            username="sport02iWN",
-            password="23KFbNzprL"
+            tests_config.HANDSHAKE
         )
         result = False  
 

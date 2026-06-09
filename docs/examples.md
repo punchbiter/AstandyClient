@@ -1,60 +1,72 @@
 # Examples
 
-## Marketplace trade subscribe
+## Calling a Generated Service
 
-An example showing how to subscribe to a skin trade on the marketplace and receive newly opened trade requests.
+Generated service methods call `client.rpc_call` internally and return parsed protobuf responses.
 
-``` python
+```python
 import asyncio
 
 from Astandy import StandClient
-from Astandy.generated.listeners import MarketplaceRemoteEventListenerOnTradeRequestOpenedUpdate
+from Astandy.generated.protos import matches_message_pb2
 
-client = StandClient("e593bcefbd4ca98a53af13f3642ab9fe")
 
-@client.MarketplaceRemoteEventListenerOnTradeRequestOpened()
-async def trade_opened(client: StandClient, update: MarketplaceRemoteEventListenerOnTradeRequestOpenedUpdate):
-    client.logger.info(f'Trade opened!')
+client = StandClient("token")
+
 
 async def main():
     await client.start()
-    await client.subscribe_trade(44006)
-    await client.idle()
+
+    request = matches_message_pb2.GetPlayerMatchesRequest()
+    response = await client.raw.MatchesRemoteService.getPlayerMatches(client, request)
+
+    client.logger.info("matches: %s", response)
+    await client.stop()
+
 
 if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-## Raw requests
+## Low-Level RPC
 
-An example showing how to use raw requests.
-For an exmaple of raw request will be PlayerRemoteService.getPlayer2.
+Use this form when you need the generated `RpcTarget` directly.
 
-``` python
+```python
+from Astandy.generated.protos import matches_message_pb2
+
+request = matches_message_pb2.GetPlayerMatchesRequest()
+target = client.raw.MatchesRemoteService.getPlayerMatchesRequest(request)
+raw_response = await client.rpc_call(target)
+response = client.raw.MatchesRemoteService.getPlayerMatchesResponse(raw_response)
+```
+
+## Event Listener
+
+Generated event decorators are available on `StandClient` through the generated mixin.
+
+```python
 import asyncio
 
 from Astandy import StandClient
-from Astandy.generated.services import GetPlayerRequest
-from Astandy.generated.listeners import MarketplaceRemoteEventListenerOnTradeRequestOpenedUpdate
+from Astandy.generated.events import AchievementsRemoteEventListenerOnAchievementsUpdatedEventUpdate
 
-client = StandClient("e593bcefbd4ca98a53af13f3642ab9fe")
+
+client = StandClient("token")
+
+
+@client.onAchievementsUpdatedEvent()
+async def achievements_updated(
+    client: StandClient,
+    update: AchievementsRemoteEventListenerOnAchievementsUpdatedEventUpdate,
+):
+    client.logger.info("achievements updated: %s", update.data)
+
 
 async def main():
     await client.start()
+    await client.idle()
 
-    request = GetPlayerRequest()
-
-    response = client.raw.PlayerRemoteService.getPlayer2Response(
-        await client.send_request(
-            *client.raw.PlayerRemoteService.getPlayer2Request(
-                request
-            )
-        )
-    )
-
-    client.logger.info(f'getPlayer2 response: {response}')
-
-    await client.stop()
 
 if __name__ == "__main__":
     asyncio.run(main())

@@ -2,12 +2,12 @@
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools]
-packages = ["Astandy"]
+[tool.setuptools.packages.find]
+include = ["Astandy*"]
 
 [project]
 name = "astandy"
-version = "0.2.4"
+version = "0.3"
 authors = [
   { name="BonePolk", email="bonepolk@gmail.com" },
 ]

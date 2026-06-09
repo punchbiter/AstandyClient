@@ -8,12 +8,18 @@ from uuid import uuid4
 import lz4.block
 from python_socks.async_.asyncio import Proxy
 from python_socks._types import ProxyType
+import deprecation
 
 from .dispatcher import Dispatcher
 from .cipher import AstandyCipher
 from .events import BaseEvents
 from .types.extras import ConnectionInfo
+from .types.rpc_target import RpcTarget
 from .generated import Generated, CADATA, GeneratedEvent, GENERATED_UPDATES, UPDATE_INDEX
+try:
+    from .generated import resolve_update
+except ImportError:
+    resolve_update = None
 from .services import Services
 from .logging import AstandyLoggers
 from .updates import Connected
@@ -21,6 +27,7 @@ from .utils import run_on_uvloop
 from .parser import Parser
 from .schemes.messages_pb2 import Response, ServerMsg
 from .errors import AstandyRPCException
+from . import version
 
 REQUEST_TIMEOUT = 15
 
@@ -279,7 +286,10 @@ class StandClient(Services, BaseEvents, Generated):
                 self._logger.warning(f"Skipped {response.id} response!")
         
         for event in server_msg.events:
-            if GeneratedEvent.has_value(event.code):
+            update = resolve_update(event.listener, event.event, event.code, event.params.one) if resolve_update else None
+            if update:
+                await self._dp.call_listeners(update)
+            elif GeneratedEvent.has_value(event.code):
                 await self._dp.call_listeners(GENERATED_UPDATES[event.code][UPDATE_INDEX[event.code]](event.params.one))
             else:
                 self.logger.warning(f"Unknown event code {event.code}!")
@@ -287,32 +297,57 @@ class StandClient(Services, BaseEvents, Generated):
         for compressed in server_msg.compressed_instances:
             data = lz4.block.decompress(compressed.compressed, uncompressed_size=compressed.uncompressed_size)
             await self._handle_msg(Parser.parse_response(data))
-    
-    async def send_request(self, code:int, request: bytes) -> Response:
-        """
-        Sending request to game servers
 
-        :param code: RPC method code
-        :param request: RPC payload
+    async def rpc_call(self, target: RpcTarget, timeout: int = REQUEST_TIMEOUT) -> Response:
+        """
+        Sending request to game servers and waiting for response
+
+        :param target: RPC target
+        :parama timeout: Timeout for waiting response
         """
         uuid = str(uuid4())
         future = asyncio.get_event_loop().create_future()
         self._pending_requests[uuid] = future
 
+        payload = target.request
+        if target.secure: payload = self.cipher.encrypt(payload)
+
         result: Response = Response()
-        if not await self._send_payload(Parser.new_msg(uuid, code, request)):
+        if not await self._send_payload(
+            Parser.new_msg(uuid, target.code, payload, target.service, target.method)
+        ):
             self._pending_requests.pop(uuid)
             raise ConnectionError("Failed to send payload: Connection lost or closed.")
         
         try:
-            result = await asyncio.wait_for(future, timeout=REQUEST_TIMEOUT)
+            result = await asyncio.wait_for(future, timeout=timeout)
+            if target.secure:  
+                for i in range(len(result.data)):
+                    result.data[i].one = self.cipher.decrypt(result.data[i].one)
         except asyncio.TimeoutError:
-            self._logger.warning(f"Request {uuid} timeout after {REQUEST_TIMEOUT} seconds")
+            self._logger.warning(f"Request {uuid} timeout after {timeout} seconds")
         finally:
             self._pending_requests.pop(uuid)
 
         return result
+    
+    async def send_request(self, code: int, request:bytes):
+        """
+        Sending request to game servers and waiting for response
 
+        :param target: Rpc method code
+        :parama request: Request data
+        """
+        return await self.rpc_call(
+            RpcTarget(
+                code,
+                "",
+                "",
+                request,
+                False
+            )
+        )
+    
     async def _send_payload(self, payload):
         await self._connected.wait()
         if not self._running or not self._writer: return False
@@ -350,6 +385,3 @@ class StandClient(Services, BaseEvents, Generated):
         self._stopped = True
         self._running = False
         await self._disconnected.wait()
-
-    
-    

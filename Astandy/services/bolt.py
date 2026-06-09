@@ -1,21 +1,16 @@
-from Astandy.generated.schemes_pb2 import SubscribeRequest
-from Astandy.types.service import Service
 import Astandy
+from Astandy.generated.protos import common_message_pb2 as common
+from Astandy.types.service import Service
 
 class BoltRemoteService(Service):
     async def subscribe(self: 'Astandy.StandClient', topic: str):
         '''
         :param topic: topic name
         '''
-        request = SubscribeRequest()
-        request.topic = topic
 
-        response = self.raw.BoltRemoteService.subscribe2Response(
-            await self.send_request(
-                *self.raw.BoltRemoteService.subscribe2Request(
-                    request
-                )
-            )
+        await self.raw.BoltRemoteService.subscribe2(
+            self,
+            common.SubscribeRequest(topic=topic)
         )
 
         return True

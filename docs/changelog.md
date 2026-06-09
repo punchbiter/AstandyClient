@@ -1,3 +1,7 @@
+# Astandy v0.3 More RPC!
+- Rewritten rpc dumper and generator.
+- Now you can call methods by service name and methods name instead code.
+
 # Astandy v0.2 Proxies!
 - The main feature is proxy support for the client.
 - StandClient is no longer a new thread. [**Check migration guide!**](migration.md)
@@ -19,3 +23,4 @@
 
 ## Astandy v0.2.4
 - Filters and comparison types fix
+
