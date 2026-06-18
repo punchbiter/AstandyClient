@@ -192,14 +192,11 @@ class Parser:
     def raise_for_exception(response: Response) -> None:
         if response.exception.code:
             error_key = "RpcExceptions/RPC" + str(response.exception.code)
-            if error_key not in Parser.translates:
-                raise AstandyRPCException(response.exception)
-            else:
-                edata = MessageToDict(response.exception, preserving_proto_field_name=True)
-                edata['description'] = Parser.translates[error_key]
-                explained_error = ExceptionExplained()
-                ParseDict(edata, explained_error)
-                raise AstandyRPCException(explained_error)
+            edata = MessageToDict(response.exception, preserving_proto_field_name=True)
+            edata['description'] = "" if error_key not in Parser.translates else Parser.translates[error_key]
+            explained_error = ExceptionExplained()
+            ParseDict(edata, explained_error)
+            raise AstandyRPCException(explained_error)
                 
     @staticmethod
     def parse_rpc_response(response: Response, response_cls: type) -> Any:
