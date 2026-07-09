@@ -1,14 +1,14 @@
-# AstandyClient
+# AstandyClient Fork
 
 An *unofficial python client* for the Standoff 2 game
 
 📢 **News: [Project Telegram Channel](https://t.me/astandy_api)**
 📚 **Documentation: [readthedocs](https://astandyclient.readthedocs.io/en/latest/)**
-
+🦊 **Author of Fork: [Telegram Channel](https://t.me/fopzo)**
 ## Installation
 
 ```bash
-pip install astandy
+pip install "git+https://github.com/punchbiter/AstandyClient.git#subdirectory=Astandy"
 ```
 
 ## Usage example

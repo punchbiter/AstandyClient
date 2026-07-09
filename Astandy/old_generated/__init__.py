@@ -1,13 +1,5 @@
-from Astandy.types.rpc_target import RpcTarget
-from .events import (
-    GENERATED_UPDATES,
-    GENERATED_UPDATES_BY_NAME,
-    UPDATE_INDEX,
-    GeneratedEvent,
-    GeneratedEvents,
-    resolve_update,
-)
-from .services import services
+from .services import *
+from .listeners import *
 
 CADATA = '''-----BEGIN CERTIFICATE-----
 MIIESTCCAzGgAwIBAgIURvZnI5HhVeWWTrA8jjdZqmHsZDYwDQYJKoZIhvcNAQEL
@@ -35,31 +27,15 @@ daVqeKur2T039baj2qEMRIYHyOjf63yNPVU8r/mTG8wBm26lJzCx9ADIxGyW5KrJ
 8l8L2p6+gBAjubM6gQ3Dh5w4ydVRTUdgDVsMLE0pO9h3LQzuG3tye1hUWjtZ
 -----END CERTIFICATE-----'''
 
-
-raw = services
-events = GeneratedEvents
-
-
 class GeneratedServices:
     raw = services
 
-
-class Generated(GeneratedServices, GeneratedEvents):
-    pass
-
+class Generated(
+    GeneratedServices,
+    GeneratedEvents
+): pass
 
 __all__ = [
-    "GENERATED_UPDATES",
-    "GENERATED_UPDATES_BY_NAME",
-    "UPDATE_INDEX",
     "CADATA",
-    "GeneratedEvent",
-    "Generated",
-    "GeneratedEvents",
-    "GeneratedServices",
-    "RpcTarget",
-    "events",
-    "resolve_update",
-    "raw",
-    "services",
+    Generated
 ]
