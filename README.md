@@ -8,7 +8,7 @@ An *unofficial python client* for the Standoff 2 game
 ## Installation
 
 ```bash
-pip install "git+https://github.com/punchbiter/AstandyClient.git"
+pip install https://github.com/punchbiter/AstandyClient/archive/refs/heads/main.zip
 ```
 
 ## Usage example
